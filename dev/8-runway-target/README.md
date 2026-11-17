@@ -1,6 +1,6 @@
 # 8-runway-target
 
-Agent Runway 계정 `nalbam-dev`와 그 계정의 환경 `devvm`(`eb` target)이 쓰는 리소스입니다. Agent Runway는 opspresso 계정(`396608815058`)의 `eks-demo`에서 실행됩니다.
+Agent Runway 계정 `nalbam-dev`와 그 계정의 환경 `dvm`(`eb` target)이 쓰는 리소스입니다. Agent Runway는 opspresso 계정(`396608815058`)의 `eks-demo`에서 실행됩니다.
 계약은 agent-platform `docs/APP_DELIVERY.md`의 "계정"이고, 배포 workflow는 argocd-env-projects `charts/delivery/files/app-deploy-eb.yaml`·
 `app-remove-eb.yaml`·`eb-stack.yaml`입니다.
 
@@ -21,7 +21,7 @@ native Java 플랫폼의 환경 secret 참조는 instance의 `ssm:GetParameter` 
 
 기존 Docker 앱 이미지는 opspresso ECR `projects/<slug>`에 있습니다. terraform-env-opsp `demo/8-app-delivery`의 registry policy가 이 계정의 instance 역할 `runway-*-app`의 pull을 허용합니다.
 
-출력 `account`와 `eb_target`은 관리자가 Agent Runway 환경 `devvm`에 넣을 값입니다(비밀 값 없음). Agent Runway는 `account.access.externalId`를 직접 정합니다.
+출력 `account`와 `eb_target`은 관리자가 Agent Runway 환경 `dvm`에 넣을 값입니다(비밀 값 없음). Agent Runway는 `account.access.externalId`를 직접 정합니다.
 
 ## 네트워크
 
