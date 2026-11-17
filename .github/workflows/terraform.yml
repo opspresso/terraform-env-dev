@@ -24,7 +24,6 @@ jobs:
       matrix:
         directory:
           - dev/1-account
-          - dev/2-vpc
           - dev/3-domain
           - dev/8-runway-target
     defaults:
