@@ -1,27 +1,27 @@
 # 8-runway-target
 
-Agent Runway 환경 `dev`의 `eb` target `dev-eb-amd64`가 쓰는 리소스입니다. Agent Runway는 opspresso 계정(`396608815058`)의 `eks-demo`에서 실행됩니다.
-계약은 agent-platform `docs/APP_DELIVERY.md`의 "외부 계정"이고, 배포 workflow는 argocd-env-projects `charts/delivery/files/app-deploy-eb.yaml`·
+Agent Runway 계정 `nalbam-dev`와 그 계정의 환경 `devvm`(`eb` target)이 쓰는 리소스입니다. Agent Runway는 opspresso 계정(`396608815058`)의 `eks-demo`에서 실행됩니다.
+계약은 agent-platform `docs/APP_DELIVERY.md`의 "계정"이고, 배포 workflow는 argocd-env-projects `charts/delivery/files/app-deploy-eb.yaml`·
 `app-remove-eb.yaml`·`eb-stack.yaml`입니다.
 
 | 리소스 | 용도 |
 | --- | --- |
 | ACM 인증서 `*.dev.rovr.dev` | load balancer HTTPS listener(`certificateArn`). `3-domain` zone의 DNS 레코드로 검증한다 |
 | KMS `alias/agent-runway` | SecureString Variable 암호화(`secretsKeyArn`). `prevent_destroy`로 보호한다. 키를 지우면 저장한 비밀 Variable을 잃는다 |
-| module `runway_target` | terraform-env-opsp `modules/runway-target`(commit SHA로 고정): app boundary `agent-runway-app-boundary`, deploy role `agent-runway-target-deploy`, EB 서비스 역할 `agent-runway-eb-service`, bucket `agent-runway-dev-eb-amd64-208587068532`, secrets 역할 `agent-runway-target-secrets` |
+| module `runway_target` | terraform-env-opsp `modules/runway-target`(commit SHA로 고정): app boundary `agent-runway-app-boundary`, deploy role `agent-runway-target-deploy`, EB 서비스 역할 `agent-runway-eb-service`, bucket `agent-runway-eb-208587068532`, secrets 역할 `agent-runway-target-secrets` |
 
 두 역할은 opspresso의 역할(terraform-env-opsp `demo/7-eks-shared`)만 신뢰하고, 둘 다 Agent Runway가 만든 External ID(`sts:ExternalId`)를 요구합니다.
 
 | 역할 | 넘겨받는 주체 | 하는 일 |
 | --- | --- | --- |
 | `agent-runway-target-deploy` | `pod-role--delivery-target`(`app-deploy-eb`·`app-remove-eb` 스텝) | session tag가 가리키는 Project 환경의 stack `runway-<project>-<env>`만 만들고 바꾼다 |
-| `agent-runway-target-secrets` | `pod-role--agent-runway`(Agent Runway) | `/agent-runway/dev-eb-amd64/*` Variable을 이 계정의 KMS key로 쓰고 읽고 지운다 |
+| `agent-runway-target-secrets` | `pod-role--agent-runway`(Agent Runway) | `environment_names`의 환경마다 `/agent-runway/<환경>/*` Variable을 이 계정의 KMS key로 쓰고 읽고 지운다. 접근 확인 경로 `/agent-runway/_runway/*`를 쓰고, 콘솔 선택지(VPC·subnet·인증서·hosted zone·EKS·EB 플랫폼)를 조회한다 |
 
 native Java 플랫폼의 환경 secret 참조는 instance의 `ssm:GetParameter` 권한을 사용하며, 자기 환경 경로로 제한됩니다.
 
 기존 Docker 앱 이미지는 opspresso ECR `projects/<slug>`에 있습니다. terraform-env-opsp `demo/8-app-delivery`의 registry policy가 이 계정의 instance 역할 `runway-*-app`의 pull을 허용합니다.
 
-출력 `account`와 `eb_target`은 관리자가 Agent Runway 환경 `dev`에 넣을 값입니다(비밀 값 없음). Agent Runway는 `account.access.externalId`를 직접 정합니다.
+출력 `account`와 `eb_target`은 관리자가 Agent Runway 환경 `devvm`에 넣을 값입니다(비밀 값 없음). Agent Runway는 `account.access.externalId`를 직접 정합니다.
 
 ## 네트워크
 
@@ -39,20 +39,14 @@ native Java 플랫폼의 환경 secret 참조는 instance의 `ssm:GetParameter` 
 
 - `1-account`, `3-domain`을 먼저 적용합니다. 이 root는 `3-domain`의 state를 읽습니다.
 - terraform-env-opsp `demo/8-app-delivery`가 `dev.rovr.dev`를 위임해야 합니다. 위임이 없으면 인증서 검증이 끝나지 않습니다.
-- `runway_external_id`가 필요합니다. 값은 Agent Runway 콘솔 **관리 > 환경 > dev**의 External ID입니다. 공개 저장소이므로 Git에 넣지 않고
+- `runway_external_id`가 필요합니다. 값은 Agent Runway 콘솔 **관리 > 계정 > nalbam-dev**의 External ID입니다. 공개 저장소이므로 Git에 넣지 않고
   `TF_VAR_runway_external_id` 환경변수나 미추적 `terraform.tfvars`로 줍니다. 값이 없으면 plan이 시작하지 않습니다.
 
 ## 적용 순서
 
-1. Agent Runway 관리자가 이미 있는 환경 `dev`에 `account`를 추가합니다. `name`·`approval`·`sandbox`·`targets`(설치 클러스터의 `eks` target)는 그대로 둡니다.
-   첫 적용 전에는 `terraform output`이 없으므로 `account`를 직접 넣습니다. Agent Runway가 `account.access.externalId`를 만듭니다.
-   machine target이 없으므로 접근 확인은 하지 않습니다. `eks` target의 Variable은 계속 Agent Runway secret store에 있습니다.
-
-   ```json
-   "account": {"id": "208587068532", "region": "ap-northeast-2",
-               "access": {"secretsRole": "arn:aws:iam::208587068532:role/agent-runway-target-secrets"}}
-   ```
-
+1. Agent Runway 관리자가 콘솔 **관리 > 계정 > 계정 추가**에서 계정을 만듭니다. 이름 `nalbam-dev`, 계정 ID `208587068532`, 리전 `ap-northeast-2`,
+   **역할로 접근**을 켜고 secrets 역할 `arn:aws:iam::208587068532:role/agent-runway-target-secrets`를 넣습니다. Agent Runway가 External ID를 만듭니다.
+   trust policy에 아직 External ID가 없으므로 이때의 접근 확인은 실패합니다.
 2. 이 디렉터리를 적용합니다. 인증서 검증은 몇 분 걸릴 수 있습니다.
 
    ```bash
@@ -60,11 +54,13 @@ native Java 플랫폼의 환경 secret 참조는 instance의 `ssm:GetParameter` 
    terraform init
    terraform plan
    terraform apply
-   terraform output -json eb_target
+   terraform output -json account
    ```
 
-3. 관리자가 환경 `dev`에 출력 `eb_target`을 target으로 추가합니다. 저장할 때 Agent Runway가 접근을 확인하고 `verifiedAt`을 기록합니다.
-   실패하면 응답의 `accessError`를 확인하고 고친 뒤 `POST /api/environments/dev/access-check`를 요청합니다.
+3. 관리자가 계정 `nalbam-dev`에 출력 `account`의 `artifactBucket`·`secretsKeyArn`을 넣어 저장하고 **접근 확인**을 누릅니다. 성공하면 `verifiedAt`이 기록됩니다.
+   실패하면 화면의 오류를 확인하고 고친 뒤 다시 확인합니다.
+4. 관리자가 **관리 > 환경 > 환경 추가**에서 계정 `nalbam-dev`, 종류 VM을 고르고 VPC·subnet·인증서·hosted zone·플랫폼을 고릅니다. 선택지는 계정에서 조회됩니다.
+   값은 출력 `eb_target`과 같습니다. 환경 이름은 `environment_names`에 있어야 합니다. 다른 이름이면 그 이름을 더해 다시 적용합니다.
 
 ## 비용과 위험
 
