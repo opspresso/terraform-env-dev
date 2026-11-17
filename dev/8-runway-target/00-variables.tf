@@ -31,7 +31,7 @@ variable "runway_external_id" {
 variable "environment_names" {
   description = "The Agent Runway environments with an eb target in this account. Each name is the second segment of its Variables' SSM path."
   type        = list(string)
-  default     = ["devvm"]
+  default     = ["dvm"]
 }
 
 variable "solution_stack" {

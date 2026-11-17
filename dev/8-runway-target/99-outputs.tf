@@ -1,4 +1,4 @@
-# What an administrator enters in Agent Runway: the account nalbam-dev and the eb target of the environment devvm. They
+# What an administrator enters in Agent Runway: the account nalbam-dev and the eb target of the environment dvm. They
 # hold no secret value; Agent Runway adds access.externalId itself and derives the role ARNs from the account ID. The
 # tiers use var.amd64_instance_types in the order small, medium, large.
 output "account" {

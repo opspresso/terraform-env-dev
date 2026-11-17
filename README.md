@@ -8,16 +8,16 @@ Agent Runway와 그 설치 계정 opspresso(`396608815058`)의 리소스는 [ter
 | --- | --- |
 | [1-account](dev/1-account/README.md) | 계정 기본 설정: IAM account alias, S3 account public access block, EBS 기본 암호화, state bucket versioning |
 | [3-domain](dev/3-domain/README.md) | public zone `dev.rovr.dev`. opspresso `rovr.dev`가 위임한다 |
-| [8-runway-target](dev/8-runway-target/README.md) | Agent Runway 계정 `nalbam-dev`와 환경 `devvm`의 `eb` target: 인증서 `*.dev.rovr.dev`, Variable KMS key, deploy·secrets 역할, app boundary, EB 서비스 역할, source bundle bucket |
+| [8-runway-target](dev/8-runway-target/README.md) | Agent Runway 계정 `nalbam-dev`와 환경 `dvm`의 `eb` target: 인증서 `*.dev.rovr.dev`, Variable KMS key, deploy·secrets 역할, app boundary, EB 서비스 역할, source bundle bucket |
 
 처음 적용할 때의 순서는 다음과 같습니다. opspresso 쪽 변경은 terraform-env-opsp `demo/8-app-delivery`에 있습니다.
 
 1. `1-account`, 그 뒤 `3-domain`
 2. terraform-env-opsp `demo/8-app-delivery`: `dev.rovr.dev` NS 위임(`3-domain`의 `name_servers`)과 ECR pull 허용(`target_account_ids`에 `208587068532`)
 3. Agent Runway에 계정 `nalbam-dev` 등록(External ID 발급), 그 뒤 `8-runway-target`
-4. Agent Runway에 계정 `nalbam-dev`의 VM 환경 `devvm` 추가
+4. Agent Runway에 계정 `nalbam-dev`의 VM 환경 `dvm` 추가
 
-환경 하나는 target 하나만 가집니다. 기존 환경 `dev`는 설치 클러스터의 `eks` target을 그대로 쓰고, 이 계정의 VM은 별도 환경 `devvm`이 씁니다.
+환경 하나는 target 하나만 가집니다. 기존 환경 `dev`는 설치 클러스터의 `eks` target을 그대로 쓰고, 이 계정의 VM은 별도 환경 `dvm`이 씁니다.
 
 ## 디렉터리 이름
 
